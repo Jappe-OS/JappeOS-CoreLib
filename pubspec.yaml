@@ -1,0 +1,21 @@
+name: jappeos_core_lib
+description: Core library for JappeOS.
+version: 1.0.0
+publish_to: none
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.1.0-81.0.dev
+
+# Add regular dependencies here.
+dependencies:
+  # path: ^1.8.0
+
+  jappeos_messaging:
+    git:
+      url: https://github.com/Jappe-OS/JappeOS-Messaging.git
+      ref: master
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
