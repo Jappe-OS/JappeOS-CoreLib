@@ -134,7 +134,7 @@ packages:
     description:
       path: "."
       ref: master
-      resolved-ref: "480b86296e40387abbc3da249ada7ba79234b996"
+      resolved-ref: "00f334f7e9f6654f06874da52a9558ac7ceac66b"
       url: "https://github.com/Jappe-OS/JappeOS-Messaging.git"
     source: git
     version: "1.0.0"

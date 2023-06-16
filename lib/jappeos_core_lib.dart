@@ -16,44 +16,73 @@
 
 // ignore_for_file: constant_identifier_names
 
+import 'dart:math';
+
 import 'package:jappeos_messaging/jappeos_messaging.dart';
 
 const JOS_LOCATION = "/JappeOS/";
 
+/// Names of the JappeOS system processes like the desktop, login screen, etc.
+class JappeOSProcessNames {
+  static var core = "jappeos_core", login = "jappeos_login", desktop = "jappeos_desktop", crashHandler = "jappeos_crh";
+}
+
+// TODO, IMPORTANT: UPDATE JAPPEOS_CORE TO USE THE NEW MESSAGING SYSTEM FOLLOWING THE CORRECT ARGUMENT NAMES FOUND FROM THIS FILE!!!
+/// Access the functionality of JappeOS's core.
 class JappeOS {
   static final Settings _settings = Settings();
   static Settings get settings => _settings;
+
+  static final WindowManager _windowManager = WindowManager();
+  static WindowManager get windowManager => _windowManager;
+
+  static final Desktop _desktop = Desktop();
+  static Desktop get desktop => _desktop;
+
+  static final SystemPrograms _systemPrograms = SystemPrograms();
+  static SystemPrograms get systemPrograms => _systemPrograms;
+
+  // ++----------------------------------------------------------------------------------++
 
   static const touchMode = false;
 
   static bool _initDone = false;
   static bool? _loggedIn;
 
+  /// Initializes this library!
+  // ignore: non_constant_identifier_names
   static void INIT() {
     if (_initDone) return;
-    CoreMessageMan.init("${JOS_LOCATION}pipes/corelib/");
-    CoreMessageMan.receive.subscribe((msg) {
-      if (msg?.message == JMSG_COREPRCSS_MSG_RECV_LOGGEDIN) {
-        _loggedIn = (msg?.args['v:']?.toLowerCase() == 'true');
+    JappeOSMessaging.init(49152);
+    JappeOSMessaging.receive.subscribe((msg) {
+      if (msg?.name == "logged-in") {
+        _loggedIn = (msg?.args['v']?.toLowerCase() == 'true');
       }
     });
     _initDone = true;
   }
 
+  /// Safely shuts down the system.
   static void safeShutdown() {
     INIT();
-    CoreMessageMan.send("${JOS_LOCATION}pipes/core/", Message(JMSG_COREPRCSS_MSG_SHUTDOWN, {}));
+    JappeOSMessaging.send(Message("shutdown", {}));
   }
 
-  // TODO: Return a Future<bool> to know if login was successful or make a LoginCallback so that it can contain a error message.
-  static void login(String username, String password) {
+  /// Logs in to the Linux system.
+  static Future<bool> login(String username, String password) async {
     INIT();
-    CoreMessageMan.send("${JOS_LOCATION}pipes/core/", Message(JMSG_COREPRCSS_MSG_LOGIN, {'u:': username, 'p:': password}));
+    int id = Random().nextInt(100);
+    JappeOSMessaging.send(Message("login", {'u': username, 'p': password, 'callbackID': id.toString()}));
+    // Listen for a callback to know if login was successful; TODO
+
+    return Future.value(true);
   }
 
+  /// Check if a user is logged in to the system.
   static Future<bool> isLoggedIn() async {
+    // TODO Callback system
     INIT();
-    CoreMessageMan.send("${JOS_LOCATION}pipes/core/", Message(JMSG_COREPRCSS_MSG_RECV_LOGGEDIN, {r'$from': '${JOS_LOCATION}pipes/corelib/'}));
+    JappeOSMessaging.send(Message("logged-in", {}));
     Future.doWhile(() async {
       return _loggedIn == null;
     });
@@ -62,12 +91,16 @@ class JappeOS {
     return b;
   }
 
+  /// Logs out from the current user.
   static void logout() {
     INIT();
-    CoreMessageMan.send("${JOS_LOCATION}pipes/core/", Message(JMSG_COREPRCSS_MSG_LOGOUT, {}));
+    JappeOSMessaging.send(Message("logout", {}));
   }
 }
 
+// REGION -->>---------------------------------------->> [ SETTINGS ] <<----------------------------------------<<--
+
+/// Manage the current system settings.
 class Settings {
   static const path = "${JOS_LOCATION}settings.json";
 
@@ -76,9 +109,53 @@ class Settings {
   Setting appearance$themeColor = Setting(() {}, () {});
 }
 
+/// A single setting used by [Settings].
 class Setting {
   final dynamic Function() get;
   final void Function() set;
 
   Setting(this.get, this.set);
+}
+
+// REGION -->>---------------------------------------->> [ WINDOW MANAGER ] <<----------------------------------------<<--
+
+/// Access to the window manager to manage the windowing system.
+class WindowManager {
+  /// Creates a new window and displays it on the screen.
+  //void newWindow(WindowType window) {}
+}
+
+// REGION -->>---------------------------------------->> [ DESKTOP ] <<----------------------------------------<<--
+
+/// Access the basic desktop systems.
+class Desktop {
+  /// Send a notification that will be displayed on the screen.
+  void sendNotification(String message) {}
+}
+
+// REGION -->>---------------------------------------->> [ SYSTEM PROGRAMS ] <<----------------------------------------<<--
+
+/// A class for a system program/program type; settings, web browser, etc.
+abstract class SystemProgram {
+  /// Launch the target system program with arguments.
+  void launch([List<String>? args]);
+
+  /// Send a command/message to the target system program.
+  void command(String cmd);
+}
+
+/// Access the default system programs.
+class SystemPrograms {
+  final SP$Settings _settings = SP$Settings();
+  SP$Settings get settings => _settings;
+}
+
+class SP$Settings extends SystemProgram {
+  @override
+  void launch([List<String>? args]) {
+    // TODO: implement launch
+  }
+
+  @override
+  void command(String cmd) {}
 }
