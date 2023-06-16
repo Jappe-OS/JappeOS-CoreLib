@@ -55,8 +55,8 @@ class JappeOS {
     if (_initDone) return;
     JappeOSMessaging.init(49152);
     JappeOSMessaging.receive.subscribe((msg) {
-      if (msg?.name == "logged-in") {
-        _loggedIn = (msg?.args['v']?.toLowerCase() == 'true');
+      if (msg?.value1.name == "logged-in") {
+        _loggedIn = (msg?.value1.args['v']?.toLowerCase() == 'true');
       }
     });
     _initDone = true;
@@ -65,14 +65,15 @@ class JappeOS {
   /// Safely shuts down the system.
   static void safeShutdown() {
     INIT();
-    JappeOSMessaging.send(Message("shutdown", {}));
+    JappeOSMessaging.clean();
+    JappeOSMessaging.send(Message("shutdown", {}), 8888);
   }
 
   /// Logs in to the Linux system.
   static Future<bool> login(String username, String password) async {
     INIT();
     int id = Random().nextInt(100);
-    JappeOSMessaging.send(Message("login", {'u': username, 'p': password, 'callbackID': id.toString()}));
+    JappeOSMessaging.send(Message("login", {'u': username, 'p': password, 'callbackID': id.toString()}), 8888);
     // Listen for a callback to know if login was successful; TODO
 
     return Future.value(true);
@@ -82,7 +83,7 @@ class JappeOS {
   static Future<bool> isLoggedIn() async {
     // TODO Callback system
     INIT();
-    JappeOSMessaging.send(Message("logged-in", {}));
+    JappeOSMessaging.send(Message("logged-in", {}), 8888);
     Future.doWhile(() async {
       return _loggedIn == null;
     });
@@ -94,7 +95,7 @@ class JappeOS {
   /// Logs out from the current user.
   static void logout() {
     INIT();
-    JappeOSMessaging.send(Message("logout", {}));
+    JappeOSMessaging.send(Message("logout", {}), 8888);
   }
 }
 
